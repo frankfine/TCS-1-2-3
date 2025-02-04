@@ -64,12 +64,12 @@
         <h1>贪吃蛇游戏：玩家 vs 电脑AI</h1>
         <p class="instructions">欢迎来到贪吃蛇！</p>
         <p class="instructions">玩家蛇的颜色是绿色，AI蛇的颜色是蓝色。</p>
-        <p class="instructions">使用箭头键控制玩家蛇，AI会自动移动。</p>
+        <p class="instructions">使用箭头键或WASD控制玩家蛇，AI会自动移动。</p>
         <p class="instructions">快捷键：按"P"暂停游戏，按"R"重新开始游戏。</p>
         <button onclick="startGame()">开始游戏</button>
     </div>
 
-    <canvas id="gameCanvas" width="1000" height="1000"></canvas>
+    <canvas id="gameCanvas" width="800" height="800"></canvas>
 
     <div id="score">
         <p>玩家得分: <span id="playerScore">0</span></p>
@@ -83,8 +83,7 @@
     </div>
 
     <div id="endScreen">
-        <h1>游戏结束</h1>
-        <p id="endMessage"></p>
+        <h1 id="endMessage">游戏结束</h1>
         <button onclick="restartGame()">重新开始</button>
     </div>
 
@@ -99,9 +98,9 @@
 
         // 游戏参数
         const gridSize = 20; // 每个方格的大小
-        const tileCount = 50; // 网格大小 50x50
-        const canvasWidth = gridSize * tileCount; // 1000px
-        const canvasHeight = gridSize * tileCount; // 1000px
+        const tileCount = 40; // 网格大小 40x40
+        const canvasWidth = gridSize * tileCount; // 800px
+        const canvasHeight = gridSize * tileCount; // 800px
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
 
@@ -136,13 +135,13 @@
                 if (!gameOver && !aiGameOver) {
                     movePlayer();
                 }
-            }, 100); // 玩家每0.1秒移动一次
+            }, 200); // 玩家每0.2秒移动一次
 
             aiInterval = setInterval(() => {
                 if (!gameOver && !aiGameOver) {
                     moveAI();
                 }
-            }, 150); // AI每0.15秒移动一次
+            }, 250); // AI每0.25秒移动一次
         }
 
         // 游戏循环
@@ -319,8 +318,8 @@
 
         // 更新得分显示
         function updateScores() {
-            playerScoreDisplay.textContent = playerScore;
-            aiScoreDisplay.textContent = aiScore;
+            playerScoreDisplay.textContent = `玩家得分: ${playerScore}`;
+            aiScoreDisplay.textContent = `AI得分: ${aiScore}`;
         }
 
         // 显示游戏结束界面
@@ -329,8 +328,8 @@
             clearInterval(playerInterval); // 停止玩家移动
             clearInterval(aiInterval); // 停止AI移动
             endScreen.style.display = 'block'; // 显示结束界面
-            const winner = gameOver ? "玩家" : "AI";
-            document.getElementById('endMessage').textContent = `${winner} 赢了！`;
+            const winner = gameOver ? "你输了" : "你赢了！";
+            document.getElementById('endMessage').textContent = winner;
         }
 
         // 重新开始游戏
@@ -371,31 +370,35 @@
                 if (!gameOver && !aiGameOver) {
                     movePlayer();
                 }
-            }, 100);
+            }, 200);
             aiInterval = setInterval(() => {
                 if (!gameOver && !aiGameOver) {
                     moveAI();
                 }
-            }, 150);
+            }, 250);
             pauseScreen.style.display = 'none';
         }
 
-        // 控制玩家蛇的移动
+        // 控制玩家蛇的移动，支持箭头键和WASD键
         document.addEventListener('keydown', (e) => {
             if (gameOver || aiGameOver) return;
 
-            if (e.key === 'ArrowLeft' && playerDirection !== 'RIGHT') {
+            if ((e.key === 'ArrowLeft' || e.key === 'a') && playerDirection !== 'RIGHT') {
                 playerDirection = 'LEFT';
-            } else if (e.key === 'ArrowRight' && playerDirection !== 'LEFT') {
+            } else if ((e.key === 'ArrowRight' || e.key === 'd') && playerDirection !== 'LEFT') {
                 playerDirection = 'RIGHT';
-            } else if (e.key === 'ArrowUp' && playerDirection !== 'DOWN') {
+            } else if ((e.key === 'ArrowUp' || e.key === 'w') && playerDirection !== 'DOWN') {
                 playerDirection = 'UP';
-            } else if (e.key === 'ArrowDown' && playerDirection !== 'UP') {
+            } else if ((e.key === 'ArrowDown' || e.key === 's') && playerDirection !== 'UP') {
                 playerDirection = 'DOWN';
             } else if (e.key === 'p') { // 按P暂停游戏
                 pauseGame();
             }
         });
+
+    </script>
+</body>
+</html>
 
     </script>
 </body>
