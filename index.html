@@ -64,7 +64,7 @@
         <h1>贪吃蛇游戏：玩家 vs 电脑AI</h1>
         <p class="instructions">欢迎来到贪吃蛇！</p>
         <p class="instructions">玩家蛇的颜色是绿色，AI蛇的颜色是蓝色。</p>
-        <p class="instructions">使用箭头键或WASD控制玩家蛇，AI会自动移动。</p>
+        <p class="instructions">使用箭头键控制玩家蛇，AI会自动移动。</p>
         <p class="instructions">快捷键：按"P"暂停游戏，按"R"重新开始游戏。</p>
         <button onclick="startGame()">开始游戏</button>
     </div>
@@ -318,8 +318,8 @@
 
         // 更新得分显示
         function updateScores() {
-            playerScoreDisplay.textContent = `玩家得分: ${playerScore}`;
-            aiScoreDisplay.textContent = `AI得分: ${aiScore}`;
+            playerScoreDisplay.textContent = playerScore;
+            aiScoreDisplay.textContent = aiScore;
         }
 
         // 显示游戏结束界面
@@ -330,6 +330,13 @@
             endScreen.style.display = 'block'; // 显示结束界面
             const winner = gameOver ? "你输了" : "你赢了！";
             document.getElementById('endMessage').textContent = winner;
+
+            // 设置游戏结束界面风格
+            if (gameOver) {
+                document.getElementById('endMessage').style.color = 'red';
+            } else {
+                document.getElementById('endMessage').style.color = 'green';
+            }
         }
 
         // 重新开始游戏
@@ -379,26 +386,22 @@
             pauseScreen.style.display = 'none';
         }
 
-        // 控制玩家蛇的移动，支持箭头键和WASD键
+        // 控制玩家蛇的移动
         document.addEventListener('keydown', (e) => {
             if (gameOver || aiGameOver) return;
 
-            if ((e.key === 'ArrowLeft' || e.key === 'a') && playerDirection !== 'RIGHT') {
+            if (e.key === 'ArrowLeft' && playerDirection !== 'RIGHT') {
                 playerDirection = 'LEFT';
-            } else if ((e.key === 'ArrowRight' || e.key === 'd') && playerDirection !== 'LEFT') {
+            } else if (e.key === 'ArrowRight' && playerDirection !== 'LEFT') {
                 playerDirection = 'RIGHT';
-            } else if ((e.key === 'ArrowUp' || e.key === 'w') && playerDirection !== 'DOWN') {
+            } else if (e.key === 'ArrowUp' && playerDirection !== 'DOWN') {
                 playerDirection = 'UP';
-            } else if ((e.key === 'ArrowDown' || e.key === 's') && playerDirection !== 'UP') {
+            } else if (e.key === 'ArrowDown' && playerDirection !== 'UP') {
                 playerDirection = 'DOWN';
             } else if (e.key === 'p') { // 按P暂停游戏
                 pauseGame();
             }
         });
-
-    </script>
-</body>
-</html>
 
     </script>
 </body>
