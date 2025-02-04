@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -121,7 +121,7 @@
         // 食物的位置
         let food = generateFood();
 
-        // 游戏循环的速度
+        // 定时器
         let gameInterval;
         let playerInterval;
         let aiInterval;
@@ -135,13 +135,13 @@
                 if (!gameOver && !aiGameOver) {
                     movePlayer();
                 }
-            }, 200); // 玩家每0.2秒移动一次
+            }, 200); // 玩家每 0.2秒 移动一次
 
             aiInterval = setInterval(() => {
                 if (!gameOver && !aiGameOver) {
                     moveAI();
                 }
-            }, 250); // AI每0.25秒移动一次
+            }, 250); // AI 每 0.25秒 移动一次
         }
 
         // 游戏循环
@@ -255,63 +255,116 @@
             ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
         }
 
-        // AI控制的贪吃蛇
+        // 优化后的 AI 控制函数，采用 BFS 算法寻找到食物的路径
         function moveAI() {
             const head = aiSnake[0];
-            const possibleDirections = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
-            let bestDirection = null;
-            let shortestDistance = Infinity;
-
-            // 计算每个方向的距离，并选择最近的路径
-            possibleDirections.forEach(direction => {
-                const newHead = {...head};
-                switch (direction) {
-                    case 'LEFT': newHead.x--; break;
-                    case 'RIGHT': newHead.x++; break;
-                    case 'UP': newHead.y--; break;
-                    case 'DOWN': newHead.y++; break;
+            const path = bfs(head, food);
+            if (path && path.length > 0) {
+                aiDirection = path[0]; // 执行路径的第一步
+            } else {
+                // 如果没有找到路径，则从所有安全移动中随机选择
+                const possibleDirections = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
+                let safeMoves = possibleDirections.filter(dir => {
+                    let newHead = { x: head.x, y: head.y };
+                    switch(dir) {
+                        case 'LEFT': newHead.x--; break;
+                        case 'RIGHT': newHead.x++; break;
+                        case 'UP': newHead.y--; break;
+                        case 'DOWN': newHead.y++; break;
+                    }
+                    return isValidMove(newHead);
+                });
+                if (safeMoves.length > 0) {
+                    aiDirection = safeMoves[Math.floor(Math.random() * safeMoves.length)];
                 }
-
-                // 计算此位置到食物的曼哈顿距离
-                const distanceToFood = Math.abs(newHead.x - food.x) + Math.abs(newHead.y - food.y);
-
-                // 选择最短的有效路径
-                if (isValidMove(newHead) && distanceToFood < shortestDistance) {
-                    shortestDistance = distanceToFood;
-                    bestDirection = direction;
-                }
-            });
-
-            if (bestDirection) {
-                aiDirection = bestDirection;
             }
         }
 
-        // 检查移动是否有效（不撞墙、不撞自己、不撞玩家的蛇）
+        // BFS 寻路算法，返回从起点到目标的方向数组（例如 ['UP', 'LEFT', ...]）
+        function bfs(start, target) {
+            const queue = [];
+            const visited = Array.from({ length: tileCount }, () => Array(tileCount).fill(false));
+            const parent = Array.from({ length: tileCount }, () => Array(tileCount).fill(null));
+            queue.push(start);
+            visited[start.y][start.x] = true;
+
+            const directions = [
+                { dir: 'UP', dx: 0, dy: -1 },
+                { dir: 'DOWN', dx: 0, dy: 1 },
+                { dir: 'LEFT', dx: -1, dy: 0 },
+                { dir: 'RIGHT', dx: 1, dy: 0 }
+            ];
+
+            while (queue.length > 0) {
+                const current = queue.shift();
+                if (current.x === target.x && current.y === target.y) {
+                    // 找到目标，回溯构建路径
+                    const path = [];
+                    let cur = current;
+                    while (parent[cur.y][cur.x] !== null) {
+                        const prev = parent[cur.y][cur.x];
+                        const dx = cur.x - prev.x;
+                        const dy = cur.y - prev.y;
+                        let dir;
+                        if (dx === 1) dir = 'RIGHT';
+                        else if (dx === -1) dir = 'LEFT';
+                        else if (dy === 1) dir = 'DOWN';
+                        else if (dy === -1) dir = 'UP';
+                        path.unshift(dir);
+                        cur = prev;
+                    }
+                    return path;
+                }
+
+                for (let d of directions) {
+                    const nx = current.x + d.dx;
+                    const ny = current.y + d.dy;
+                    if (nx < 0 || nx >= tileCount || ny < 0 || ny >= tileCount) continue;
+                    if (visited[ny][nx]) continue;
+                    // 判断障碍物：墙壁、AI 蛇（不考虑即将消失的尾部，可进一步优化）、玩家蛇
+                    if (isObstacle({ x: nx, y: ny })) continue;
+                    visited[ny][nx] = true;
+                    parent[ny][nx] = current;
+                    queue.push({ x: nx, y: ny });
+                }
+            }
+            return null; // 无法到达目标
+        }
+
+        // 判断目标格是否为障碍物（即存在于 AI 蛇或玩家蛇上）
+        function isObstacle(cell) {
+            // 检查 AI 蛇（可略过尾部，因为尾部会移动，但这里简单处理）
+            for (let segment of aiSnake) {
+                if (cell.x === segment.x && cell.y === segment.y) return true;
+            }
+            // 检查玩家蛇
+            for (let segment of playerSnake) {
+                if (cell.x === segment.x && cell.y === segment.y) return true;
+            }
+            return false;
+        }
+
+        // 检查移动是否有效（不撞墙、不撞蛇）
         function isValidMove(newHead) {
-            // 撞墙
             if (newHead.x < 0 || newHead.x >= tileCount || newHead.y < 0 || newHead.y >= tileCount) {
                 return false;
             }
-
-            // 撞到自己的身体
-            for (let i = 0; i < aiSnake.length; i++) {
-                if (newHead.x === aiSnake[i].x && newHead.y === aiSnake[i].y) {
+            // 检查 AI 蛇的身体
+            for (let segment of aiSnake) {
+                if (newHead.x === segment.x && newHead.y === segment.y) {
                     return false;
                 }
             }
-
-            // 撞到玩家的身体
-            for (let i = 0; i < playerSnake.length; i++) {
-                if (newHead.x === playerSnake[i].x && newHead.y === playerSnake[i].y) {
+            // 检查玩家蛇的身体
+            for (let segment of playerSnake) {
+                if (newHead.x === segment.x && newHead.y === segment.y) {
                     return false;
                 }
             }
-
             return true;
         }
 
-        // 玩家控制的蛇
+        // 玩家控制的蛇（这里只是简单调用 updateSnake，因为方向由键盘事件控制）
         function movePlayer() {
             updateSnake(playerSnake, playerDirection);
         }
@@ -333,11 +386,11 @@
 
             // 设置游戏结束界面风格
             if (gameOver) {
-                document.getElementById('endMessage').style.color = 'red';
+                document.getElementById('endMessage').style.color = 'red';  // 失败时显示红色
                 document.getElementById('endMessage').style.fontSize = '3em';
                 document.getElementById('endMessage').style.fontWeight = 'bold';
             } else {
-                document.getElementById('endMessage').style.color = 'green';
+                document.getElementById('endMessage').style.color = 'green';  // 胜利时显示绿色
                 document.getElementById('endMessage').style.fontSize = '3em';
                 document.getElementById('endMessage').style.fontWeight = 'bold';
             }
@@ -354,8 +407,8 @@
         function resetGame() {
             gameOver = false;
             aiGameOver = false;
-            playerSnake = [{x: 5, y: 5}];
-            aiSnake = [{x: 10, y: 10}];
+            playerSnake = [{ x: 5, y: 5 }];
+            aiSnake = [{ x: 10, y: 10 }];
             playerLength = 1;
             aiLength = 1;
             food = generateFood();
@@ -402,11 +455,12 @@
                 playerDirection = 'UP';
             } else if (e.key === 'ArrowDown' && playerDirection !== 'UP') {
                 playerDirection = 'DOWN';
-            } else if (e.key === 'p') { // 按P暂停游戏
+            } else if (e.key === 'p' || e.key === 'P') { // 按P暂停游戏
                 pauseGame();
+            } else if (e.key === 'r' || e.key === 'R') { // 按R重新开始游戏
+                restartGame();
             }
         });
-
     </script>
 </body>
 </html>
