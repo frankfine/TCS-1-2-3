@@ -69,7 +69,7 @@
         <button onclick="startGame()">开始游戏</button>
     </div>
 
-    <canvas id="gameCanvas" width="800" height="800"></canvas>
+    <canvas id="gameCanvas" width="500" height="500"></canvas>
 
     <div id="score">
         <p>玩家得分: <span id="playerScore">0</span></p>
@@ -98,9 +98,9 @@
 
         // 游戏参数
         const gridSize = 20; // 每个方格的大小
-        const tileCount = 40; // 网格大小 40x40
-        const canvasWidth = gridSize * tileCount; // 800px
-        const canvasHeight = gridSize * tileCount; // 800px
+        const tileCount = 25; // 网格大小 25x25
+        const canvasWidth = gridSize * tileCount; // 500px
+        const canvasHeight = gridSize * tileCount; // 500px
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
 
@@ -334,8 +334,12 @@
             // 设置游戏结束界面风格
             if (gameOver) {
                 document.getElementById('endMessage').style.color = 'red';
+                document.getElementById('endMessage').style.fontSize = '3em';
+                document.getElementById('endMessage').style.fontWeight = 'bold';
             } else {
                 document.getElementById('endMessage').style.color = 'green';
+                document.getElementById('endMessage').style.fontSize = '3em';
+                document.getElementById('endMessage').style.fontWeight = 'bold';
             }
         }
 
