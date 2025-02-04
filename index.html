@@ -64,7 +64,7 @@
     <h1>贪吃蛇游戏：玩家 vs 电脑AI</h1>
     <p class="instructions">欢迎来到贪吃蛇！</p>
     <p class="instructions">玩家蛇的颜色是绿色，AI蛇的颜色是蓝色。</p>
-    <p class="instructions">使用箭头键控制玩家蛇，AI会自动追逐食物。</p>
+    <p class="instructions">使用箭头键控制玩家蛇，AI会自动追逐食物且避免撞墙！</p>
     <p class="instructions">快捷键：按 "P" 暂停游戏，按 "R" 重新开始游戏。</p>
     <button onclick="startGame()">开始游戏</button>
   </div>
@@ -98,16 +98,16 @@
     const pauseScreen = document.getElementById('pauseScreen');
 
     // 游戏参数
-    const gridSize = 20; // 每个方格的像素大小
-    const tileCount = 35; // 网格 35x35
+    const gridSize = 20;           // 每个方格的像素大小
+    const tileCount = 35;          // 网格 35x35
     const canvasWidth = gridSize * tileCount; // 700px
     const canvasHeight = gridSize * tileCount; // 700px
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
 
     // 玩家和 AI 的蛇（初始位置可根据需要调整）
-    let playerSnake = [{x: 5, y: 5}];
-    let aiSnake = [{x: 10, y: 10}];
+    let playerSnake = [{ x: 5, y: 5 }];
+    let aiSnake = [{ x: 10, y: 10 }];
     let playerDirection = 'RIGHT';
     let aiDirection = 'LEFT';
 
@@ -172,10 +172,10 @@
       drawFood(food);
     }
 
-    // 更新蛇的位置（根据传入方向移动）
+    // 根据传入方向更新蛇的位置
     function updateSnake(snake, direction) {
       const head = { ...snake[0] };
-      switch(direction) {
+      switch (direction) {
         case 'LEFT': head.x--; break;
         case 'RIGHT': head.x++; break;
         case 'UP': head.y--; break;
@@ -187,7 +187,7 @@
       }
     }
 
-    // 检测蛇是否碰撞（撞墙或撞到自身）
+    // 检测蛇是否撞墙或撞到自己
     function checkCollision(snake) {
       const head = snake[0];
       if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
@@ -237,29 +237,48 @@
       const head = aiSnake[0];
       const path = astar(head, food);
       if (path && path.length > 0) {
-        aiDirection = path[0];  // 取路径中的第一步方向
-      } else {
-        // 若未找到路径，则从所有安全方向中随机选择一个
-        const possibleDirections = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
-        let safeMoves = possibleDirections.filter(dir => {
-          let newHead = { x: head.x, y: head.y };
-          switch(dir) {
-            case 'LEFT': newHead.x--; break;
-            case 'RIGHT': newHead.x++; break;
-            case 'UP': newHead.y--; break;
-            case 'DOWN': newHead.y++; break;
-          }
-          return isValidMove(newHead);
-        });
-        if (safeMoves.length > 0) {
-          aiDirection = safeMoves[Math.floor(Math.random() * safeMoves.length)];
+        const nextDir = path[0];
+        // 计算下一步的位置
+        let newHead = { x: head.x, y: head.y };
+        switch (nextDir) {
+          case 'LEFT': newHead.x--; break;
+          case 'RIGHT': newHead.x++; break;
+          case 'UP': newHead.y--; break;
+          case 'DOWN': newHead.y++; break;
         }
+        // 如果下一步安全，则采用该方向，否则从安全方向中随机选择
+        if (isValidMove(newHead)) {
+          aiDirection = nextDir;
+        } else {
+          fallbackSafeMove(head);
+        }
+      } else {
+        // 若 A* 未能找到路径，则使用安全随机策略
+        fallbackSafeMove(head);
       }
     }
 
-    // A* 寻路算法
+    // 安全随机选择一个方向（确保不会撞墙或撞自己）
+    function fallbackSafeMove(head) {
+      const possibleDirections = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
+      let safeMoves = possibleDirections.filter(dir => {
+        let newHead = { x: head.x, y: head.y };
+        switch(dir) {
+          case 'LEFT': newHead.x--; break;
+          case 'RIGHT': newHead.x++; break;
+          case 'UP': newHead.y--; break;
+          case 'DOWN': newHead.y++; break;
+        }
+        return isValidMove(newHead);
+      });
+      if (safeMoves.length > 0) {
+        aiDirection = safeMoves[Math.floor(Math.random() * safeMoves.length)];
+      }
+    }
+
+    // A* 算法实现
     function astar(start, target) {
-      // 使用哈希函数将节点转换为字符串
+      // 将节点转换为字符串，用作哈希键
       function hash(node) {
         return node.x + ',' + node.y;
       }
@@ -267,7 +286,7 @@
       function heuristic(a, b) {
         return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
       }
-      // 获取当前节点的邻居（只考虑不为障碍的位置）
+      // 获取不为障碍的邻居节点
       function getNeighbors(node) {
         const dirs = [
           { dx: 0, dy: -1 },
@@ -280,19 +299,19 @@
           let nx = node.x + d.dx;
           let ny = node.y + d.dy;
           if (nx >= 0 && nx < tileCount && ny >= 0 && ny < tileCount) {
-            if (!isObstacle({x: nx, y: ny})) {
-              result.push({x: nx, y: ny});
+            if (!isObstacle({ x: nx, y: ny })) {
+              result.push({ x: nx, y: ny });
             }
           }
         }
         return result;
       }
-      
+
       let openSet = new Set();
       let openList = [];
-      let cameFrom = {};  // key: "x,y"  value: parent node
-      let gScore = {};    // key: "x,y"  value: cost from start
-      let fScore = {};    // key: "x,y"  value: g + heuristic
+      let cameFrom = {};  // key: "x,y"  value: 父节点
+      let gScore = {};    // key: "x,y"  value: 从起点到该节点的代价
+      let fScore = {};    // key: "x,y"  value: gScore + 启发值
 
       // 初始化所有节点分数为无穷大
       for (let y = 0; y < tileCount; y++) {
@@ -310,7 +329,6 @@
       openList.push(start);
 
       while (openSet.size > 0) {
-        // 从 openList 中选取 fScore 最低的节点
         let current, currentKey;
         let bestF = Infinity;
         for (let node of openList) {
@@ -321,7 +339,7 @@
             currentKey = key;
           }
         }
-        // 如果找到了目标，重构路径
+        // 找到目标则重构路径
         if (current.x === target.x && current.y === target.y) {
           return reconstructPath(cameFrom, current);
         }
@@ -342,10 +360,10 @@
           }
         }
       }
-      return null; // 如果无法到达目标，则返回 null
+      return null; // 无法到达目标时返回 null
     }
 
-    // 重构路径：将从起点到目标的节点序列转换为方向数组（例如 ['UP', 'LEFT', ...]）
+    // 将路径中的节点序列转换为方向数组（例如 ['UP', 'LEFT', ...]）
     function reconstructPath(cameFrom, current) {
       function hash(node) {
         return node.x + ',' + node.y;
@@ -379,7 +397,7 @@
       return false;
     }
 
-    // 检查移动是否有效（仅避墙和 AI 自己的身体）
+    // 检查移动是否有效（避免撞墙和撞到 AI 自己）
     function isValidMove(newHead) {
       if (newHead.x < 0 || newHead.x >= tileCount || newHead.y < 0 || newHead.y >= tileCount) {
         return false;
