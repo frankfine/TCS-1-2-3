@@ -64,7 +64,8 @@
     <h1>贪吃蛇游戏：玩家 vs 电脑AI</h1>
     <p class="instructions">欢迎来到贪吃蛇！</p>
     <p class="instructions">玩家蛇的颜色是绿色，AI蛇的颜色是蓝色。</p>
-    <p class="instructions">使用箭头键控制玩家蛇，AI会自动追逐食物且避免撞墙！</p>
+    <p class="instructions">使用箭头键控制玩家蛇，AI会自动追逐食物且避免撞墙。</p>
+    <p class="instructions">如果从一个方向没有吃到食物，AI会尝试换方向。</p>
     <p class="instructions">快捷键：按 "P" 暂停游戏，按 "R" 重新开始游戏。</p>
     <button onclick="startGame()">开始游戏</button>
   </div>
@@ -105,7 +106,7 @@
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
 
-    // 玩家和 AI 的蛇（初始位置可根据需要调整）
+    // 玩家和 AI 的蛇（初始位置）
     let playerSnake = [{ x: 5, y: 5 }];
     let aiSnake = [{ x: 10, y: 10 }];
     let playerDirection = 'RIGHT';
@@ -126,6 +127,11 @@
     let gameInterval;
     let playerInterval;
     let aiInterval;
+
+    // 辅助函数：曼哈顿距离
+    function manhattan(a, b) {
+      return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+    }
 
     // 游戏开始
     function startGame() {
@@ -231,14 +237,15 @@
     }
 
     // ---------------------------
-    // AI 控制部分：采用 A* 算法
+    // AI 控制部分：采用 A* 算法+安全检测
     // ---------------------------
     function moveAI() {
       const head = aiSnake[0];
+      const currentDistance = manhattan(head, food);
       const path = astar(head, food);
       if (path && path.length > 0) {
         const nextDir = path[0];
-        // 计算下一步的位置
+        // 模拟下一步的位置
         let newHead = { x: head.x, y: head.y };
         switch (nextDir) {
           case 'LEFT': newHead.x--; break;
@@ -246,16 +253,15 @@
           case 'UP': newHead.y--; break;
           case 'DOWN': newHead.y++; break;
         }
-        // 如果下一步安全，则采用该方向，否则从安全方向中随机选择
-        if (isValidMove(newHead)) {
+        const newDistance = manhattan(newHead, food);
+        // 如果下一步使距离变短且安全，则采用该方向
+        if (newDistance < currentDistance && isValidMove(newHead)) {
           aiDirection = nextDir;
-        } else {
-          fallbackSafeMove(head);
+          return;
         }
-      } else {
-        // 若 A* 未能找到路径，则使用安全随机策略
-        fallbackSafeMove(head);
       }
+      // 如果未找到合适方向，尝试从所有安全方向中随机选择一个
+      fallbackSafeMove(head);
     }
 
     // 安全随机选择一个方向（确保不会撞墙或撞自己）
@@ -278,15 +284,12 @@
 
     // A* 算法实现
     function astar(start, target) {
-      // 将节点转换为字符串，用作哈希键
       function hash(node) {
         return node.x + ',' + node.y;
       }
-      // 启发函数：曼哈顿距离
       function heuristic(a, b) {
         return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
       }
-      // 获取不为障碍的邻居节点
       function getNeighbors(node) {
         const dirs = [
           { dx: 0, dy: -1 },
@@ -313,7 +316,6 @@
       let gScore = {};    // key: "x,y"  value: 从起点到该节点的代价
       let fScore = {};    // key: "x,y"  value: gScore + 启发值
 
-      // 初始化所有节点分数为无穷大
       for (let y = 0; y < tileCount; y++) {
         for (let x = 0; x < tileCount; x++) {
           const key = x + ',' + y;
@@ -339,7 +341,6 @@
             currentKey = key;
           }
         }
-        // 找到目标则重构路径
         if (current.x === target.x && current.y === target.y) {
           return reconstructPath(cameFrom, current);
         }
@@ -360,10 +361,10 @@
           }
         }
       }
-      return null; // 无法到达目标时返回 null
+      return null;
     }
 
-    // 将路径中的节点序列转换为方向数组（例如 ['UP', 'LEFT', ...]）
+    // 重构路径，将节点序列转换为方向数组（例如 ['UP', 'LEFT', ...]）
     function reconstructPath(cameFrom, current) {
       function hash(node) {
         return node.x + ',' + node.y;
