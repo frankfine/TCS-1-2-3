@@ -223,23 +223,13 @@
     function checkCollision(snake) {
       const head = snake[0];
       if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
-        if (snake === playerSnake) {
-          gameOver = true;
-          playerScore -= 5;  // 玩家撞墙后，减5分
-        } else {
-          aiGameOver = true;
-          aiScore -= 5;  // AI撞墙后，减5分
-        }
+        if (snake === playerSnake) gameOver = true;
+        else aiGameOver = true;
       }
       for (let i = 1; i < snake.length; i++) {
         if (head.x === snake[i].x && head.y === snake[i].y) {
-          if (snake === playerSnake) {
-            gameOver = true;
-            playerScore -= 5;  // 玩家撞到自己时也减5分
-          } else {
-            aiGameOver = true;
-            aiScore -= 5;  // AI撞到自己时也减5分
-          }
+          if (snake === playerSnake) gameOver = true;
+          else aiGameOver = true;
         }
       }
     }
@@ -396,20 +386,8 @@
       clearInterval(playerInterval);
       clearInterval(aiInterval);
       endScreen.style.display = 'block';
-      
-      // 比较玩家和AI的得分，确定输赢
-      const winner = playerScore > aiScore ? "你赢了！" : "你输了";
+      const winner = gameOver ? "你输了" : "你赢了！";
       document.getElementById('endMessage').textContent = winner;
-
-      if (winner === "你输了") {
-        document.getElementById('endMessage').style.color = 'red';
-        document.getElementById('endMessage').style.fontSize = '3em';
-        document.getElementById('endMessage').style.fontWeight = 'bold';
-      } else {
-        document.getElementById('endMessage').style.color = 'green';
-        document.getElementById('endMessage').style.fontSize = '3em';
-        document.getElementById('endMessage').style.fontWeight = 'bold';
-      }
     }
 
     // 重新开始游戏
