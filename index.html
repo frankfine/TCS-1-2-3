@@ -1,466 +1,453 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>贪吃蛇游戏：玩家 vs 电脑AI</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-        }
-        canvas {
-            border: 1px solid black;
-            margin-top: 20px;
-        }
-        h1 {
-            margin-top: 20px;
-        }
-        .game-over {
-            font-size: 2em;
-            color: red;
-        }
-        #startScreen, #endScreen {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-        }
-        #startScreen button, #endScreen button {
-            padding: 10px 20px;
-            font-size: 18px;
-            cursor: pointer;
-        }
-        #endScreen {
-            display: none;
-        }
-        #gameCanvas {
-            display: block;
-            margin: 0 auto;
-        }
-        #pauseScreen {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            display: none;
-            text-align: center;
-        }
-        #score {
-            font-size: 20px;
-            font-weight: bold;
-        }
-        .instructions {
-            font-size: 18px;
-            margin: 10px 0;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>贪吃蛇游戏：玩家 vs 电脑AI</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    canvas {
+      border: 1px solid black;
+      margin-top: 20px;
+    }
+    h1 {
+      margin-top: 20px;
+    }
+    .game-over {
+      font-size: 2em;
+      color: red;
+    }
+    #startScreen, #endScreen {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+    #startScreen button, #endScreen button {
+      padding: 10px 20px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    #endScreen {
+      display: none;
+    }
+    #gameCanvas {
+      display: block;
+      margin: 0 auto;
+    }
+    #pauseScreen {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+      text-align: center;
+    }
+    #score {
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .instructions {
+      font-size: 18px;
+      margin: 10px 0;
+    }
+  </style>
 </head>
 <body>
-    <div id="startScreen">
-        <h1>贪吃蛇游戏：玩家 vs 电脑AI</h1>
-        <p class="instructions">欢迎来到贪吃蛇！</p>
-        <p class="instructions">玩家蛇的颜色是绿色，AI蛇的颜色是蓝色。</p>
-        <p class="instructions">使用箭头键控制玩家蛇，AI会自动移动。</p>
-        <p class="instructions">快捷键：按"P"暂停游戏，按"R"重新开始游戏。</p>
-        <button onclick="startGame()">开始游戏</button>
-    </div>
+  <div id="startScreen">
+    <h1>贪吃蛇游戏：玩家 vs 电脑AI</h1>
+    <p class="instructions">欢迎来到贪吃蛇！</p>
+    <p class="instructions">玩家蛇的颜色是绿色，AI蛇的颜色是蓝色。</p>
+    <p class="instructions">使用箭头键控制玩家蛇，AI会自动移动追逐食物。</p>
+    <p class="instructions">快捷键：按 "P" 暂停游戏，按 "R" 重新开始游戏。</p>
+    <button onclick="startGame()">开始游戏</button>
+  </div>
 
-    <canvas id="gameCanvas" width="500" height="500"></canvas>
+  <canvas id="gameCanvas" width="500" height="500"></canvas>
 
-    <div id="score">
-        <p>玩家得分: <span id="playerScore">0</span></p>
-        <p>AI得分: <span id="aiScore">0</span></p>
-    </div>
+  <div id="score">
+    <p>玩家得分: <span id="playerScore">0</span></p>
+    <p>AI得分: <span id="aiScore">0</span></p>
+  </div>
 
-    <div id="pauseScreen">
-        <h2>游戏暂停</h2>
-        <button onclick="resumeGame()">继续游戏</button>
-        <button onclick="restartGame()">重新开始</button>
-    </div>
+  <div id="pauseScreen">
+    <h2>游戏暂停</h2>
+    <button onclick="resumeGame()">继续游戏</button>
+    <button onclick="restartGame()">重新开始</button>
+  </div>
 
-    <div id="endScreen">
-        <h1 id="endMessage">游戏结束</h1>
-        <button onclick="restartGame()">重新开始</button>
-    </div>
+  <div id="endScreen">
+    <h1 id="endMessage">游戏结束</h1>
+    <button onclick="restartGame()">重新开始</button>
+  </div>
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const playerScoreDisplay = document.getElementById('playerScore');
-        const aiScoreDisplay = document.getElementById('aiScore');
-        const startScreen = document.getElementById('startScreen');
-        const endScreen = document.getElementById('endScreen');
-        const pauseScreen = document.getElementById('pauseScreen');
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const playerScoreDisplay = document.getElementById('playerScore');
+    const aiScoreDisplay = document.getElementById('aiScore');
+    const startScreen = document.getElementById('startScreen');
+    const endScreen = document.getElementById('endScreen');
+    const pauseScreen = document.getElementById('pauseScreen');
 
-        // 游戏参数
-        const gridSize = 20; // 每个方格的大小
-        const tileCount = 25; // 网格大小 25x25
-        const canvasWidth = gridSize * tileCount; // 500px
-        const canvasHeight = gridSize * tileCount; // 500px
-        canvas.width = canvasWidth;
-        canvas.height = canvasHeight;
+    // 游戏参数
+    const gridSize = 20; // 每个方格的大小
+    const tileCount = 25; // 网格大小 25x25
+    const canvasWidth = gridSize * tileCount; // 500px
+    const canvasHeight = gridSize * tileCount; // 500px
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
 
-        // 玩家和AI的蛇
-        let playerSnake = [{x: 5, y: 5}];
-        let aiSnake = [{x: 10, y: 10}];
-        let playerDirection = 'RIGHT';
-        let aiDirection = 'LEFT';
+    // 玩家和 AI 的蛇
+    let playerSnake = [{x: 5, y: 5}];
+    let aiSnake = [{x: 10, y: 10}];
+    let playerDirection = 'RIGHT';
+    let aiDirection = 'LEFT';
 
-        // 游戏状态
-        let gameOver = false;
-        let aiGameOver = false;
-        let playerLength = 1;
-        let aiLength = 1;
-        let playerScore = 0;
-        let aiScore = 0;
+    // 游戏状态
+    let gameOver = false;
+    let aiGameOver = false;
+    let playerLength = 1;
+    let aiLength = 1;
+    let playerScore = 0;
+    let aiScore = 0;
 
-        // 食物的位置
-        let food = generateFood();
+    // 食物的位置
+    let food = generateFood();
 
-        // 定时器
-        let gameInterval;
-        let playerInterval;
-        let aiInterval;
+    // 定时器
+    let gameInterval;
+    let playerInterval;
+    let aiInterval;
 
-        // 游戏开始
-        function startGame() {
-            startScreen.style.display = 'none'; // 隐藏开始界面
-            resetGame(); // 重置游戏状态
-            gameInterval = setInterval(gameLoop, 50); // 启动游戏循环
-            playerInterval = setInterval(() => {
-                if (!gameOver && !aiGameOver) {
-                    movePlayer();
-                }
-            }, 200); // 玩家每 0.2秒 移动一次
-
-            aiInterval = setInterval(() => {
-                if (!gameOver && !aiGameOver) {
-                    moveAI();
-                }
-            }, 250); // AI 每 0.25秒 移动一次
+    // 游戏开始
+    function startGame() {
+      startScreen.style.display = 'none'; // 隐藏开始界面
+      resetGame(); // 重置游戏状态
+      gameInterval = setInterval(gameLoop, 100); // 游戏循环间隔 100ms
+      playerInterval = setInterval(() => {
+        if (!gameOver && !aiGameOver) {
+          movePlayer();
         }
+      }, 400); // 玩家移动间隔 400ms
 
-        // 游戏循环
-        function gameLoop() {
-            if (gameOver || aiGameOver) {
-                showEndScreen();
-                return;
-            }
-
-            // 清除画布
-            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-
-            // 更新玩家和AI蛇的位置
-            updateSnake(playerSnake, playerDirection);
-            updateSnake(aiSnake, aiDirection);
-
-            // 检测碰撞
-            checkCollision(playerSnake);
-            checkCollision(aiSnake);
-
-            // 检查蛇是否吃到食物
-            if (checkFoodCollision(playerSnake)) {
-                playerLength++;
-                food = generateFood();
-                playerScore++;
-                updateScores();
-            }
-            if (checkFoodCollision(aiSnake)) {
-                aiLength++;
-                food = generateFood();
-                aiScore++;
-                updateScores();
-            }
-
-            // 渲染游戏
-            drawSnake(playerSnake, 'green');
-            drawSnake(aiSnake, 'blue');
-            drawFood(food);
+      aiInterval = setInterval(() => {
+        if (!gameOver && !aiGameOver) {
+          moveAI();
         }
+      }, 500); // AI 移动间隔 500ms
+    }
 
-        // 更新蛇的位置信息
-        function updateSnake(snake, direction) {
-            const head = { ...snake[0] };
-            switch (direction) {
-                case 'LEFT':
-                    head.x--;
-                    break;
-                case 'RIGHT':
-                    head.x++;
-                    break;
-                case 'UP':
-                    head.y--;
-                    break;
-                case 'DOWN':
-                    head.y++;
-                    break;
-            }
+    // 游戏循环
+    function gameLoop() {
+      if (gameOver || aiGameOver) {
+        showEndScreen();
+        return;
+      }
 
-            // 在蛇头位置插入新的头部
-            snake.unshift(head);
+      // 清除画布
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-            // 删除尾部，保持蛇的长度
-            if (snake.length > (snake === playerSnake ? playerLength : aiLength)) {
-                snake.pop();
-            }
+      // 更新玩家和 AI 蛇的位置
+      updateSnake(playerSnake, playerDirection);
+      updateSnake(aiSnake, aiDirection);
+
+      // 检测碰撞
+      checkCollision(playerSnake);
+      checkCollision(aiSnake);
+
+      // 检查蛇是否吃到食物
+      if (checkFoodCollision(playerSnake)) {
+        playerLength++;
+        food = generateFood();
+        playerScore++;
+        updateScores();
+      }
+      if (checkFoodCollision(aiSnake)) {
+        aiLength++;
+        food = generateFood();
+        aiScore++;
+        updateScores();
+      }
+
+      // 渲染游戏
+      drawSnake(playerSnake, 'green');
+      drawSnake(aiSnake, 'blue');
+      drawFood(food);
+    }
+
+    // 更新蛇的位置信息
+    function updateSnake(snake, direction) {
+      const head = { ...snake[0] };
+      switch (direction) {
+        case 'LEFT':
+          head.x--;
+          break;
+        case 'RIGHT':
+          head.x++;
+          break;
+        case 'UP':
+          head.y--;
+          break;
+        case 'DOWN':
+          head.y++;
+          break;
+      }
+
+      // 在蛇头位置插入新的头部
+      snake.unshift(head);
+
+      // 删除尾部，保持蛇的长度
+      if (snake.length > (snake === playerSnake ? playerLength : aiLength)) {
+        snake.pop();
+      }
+    }
+
+    // 检测蛇是否碰到墙壁或自己
+    function checkCollision(snake) {
+      const head = snake[0];
+      // 撞到墙壁
+      if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+        if (snake === playerSnake) gameOver = true;
+        else aiGameOver = true;
+      }
+      // 撞到自己
+      for (let i = 1; i < snake.length; i++) {
+        if (head.x === snake[i].x && head.y === snake[i].y) {
+          if (snake === playerSnake) gameOver = true;
+          else aiGameOver = true;
         }
+      }
+    }
 
-        // 检测蛇是否碰到墙壁或自己
-        function checkCollision(snake) {
-            const head = snake[0];
-            // 撞到墙壁
-            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
-                if (snake === playerSnake) gameOver = true;
-                else aiGameOver = true;
-            }
+    // 检查蛇是否吃到食物
+    function checkFoodCollision(snake) {
+      const head = snake[0];
+      return head.x === food.x && head.y === food.y;
+    }
 
-            // 撞到自己
-            for (let i = 1; i < snake.length; i++) {
-                if (head.x === snake[i].x && head.y === snake[i].y) {
-                    if (snake === playerSnake) gameOver = true;
-                    else aiGameOver = true;
-                }
-            }
-        }
+    // 随机生成食物的位置
+    function generateFood() {
+      return {
+        x: Math.floor(Math.random() * tileCount),
+        y: Math.floor(Math.random() * tileCount)
+      };
+    }
 
-        // 检查蛇是否吃到食物
-        function checkFoodCollision(snake) {
-            const head = snake[0];
-            return head.x === food.x && head.y === food.y;
-        }
+    // 渲染蛇
+    function drawSnake(snake, color) {
+      snake.forEach(segment => {
+        ctx.fillStyle = color;
+        ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
+      });
+    }
 
-        // 随机生成食物的位置
-        function generateFood() {
-            return {
-                x: Math.floor(Math.random() * tileCount),
-                y: Math.floor(Math.random() * tileCount)
-            };
-        }
+    // 渲染食物
+    function drawFood(food) {
+      ctx.fillStyle = 'red';
+      ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
+    }
 
-        // 渲染蛇
-        function drawSnake(snake, color) {
-            snake.forEach(segment => {
-                ctx.fillStyle = color;
-                ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
-            });
-        }
-
-        // 渲染食物
-        function drawFood(food) {
-            ctx.fillStyle = 'red';
-            ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
-        }
-
-        // 优化后的 AI 控制函数，采用 BFS 算法寻找到食物的路径
-        function moveAI() {
-            const head = aiSnake[0];
-            const path = bfs(head, food);
-            if (path && path.length > 0) {
-                aiDirection = path[0]; // 执行路径的第一步
-            } else {
-                // 如果没有找到路径，则从所有安全移动中随机选择
-                const possibleDirections = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
-                let safeMoves = possibleDirections.filter(dir => {
-                    let newHead = { x: head.x, y: head.y };
-                    switch(dir) {
-                        case 'LEFT': newHead.x--; break;
-                        case 'RIGHT': newHead.x++; break;
-                        case 'UP': newHead.y--; break;
-                        case 'DOWN': newHead.y++; break;
-                    }
-                    return isValidMove(newHead);
-                });
-                if (safeMoves.length > 0) {
-                    aiDirection = safeMoves[Math.floor(Math.random() * safeMoves.length)];
-                }
-            }
-        }
-
-        // BFS 寻路算法，返回从起点到目标的方向数组（例如 ['UP', 'LEFT', ...]）
-        function bfs(start, target) {
-            const queue = [];
-            const visited = Array.from({ length: tileCount }, () => Array(tileCount).fill(false));
-            const parent = Array.from({ length: tileCount }, () => Array(tileCount).fill(null));
-            queue.push(start);
-            visited[start.y][start.x] = true;
-
-            const directions = [
-                { dir: 'UP', dx: 0, dy: -1 },
-                { dir: 'DOWN', dx: 0, dy: 1 },
-                { dir: 'LEFT', dx: -1, dy: 0 },
-                { dir: 'RIGHT', dx: 1, dy: 0 }
-            ];
-
-            while (queue.length > 0) {
-                const current = queue.shift();
-                if (current.x === target.x && current.y === target.y) {
-                    // 找到目标，回溯构建路径
-                    const path = [];
-                    let cur = current;
-                    while (parent[cur.y][cur.x] !== null) {
-                        const prev = parent[cur.y][cur.x];
-                        const dx = cur.x - prev.x;
-                        const dy = cur.y - prev.y;
-                        let dir;
-                        if (dx === 1) dir = 'RIGHT';
-                        else if (dx === -1) dir = 'LEFT';
-                        else if (dy === 1) dir = 'DOWN';
-                        else if (dy === -1) dir = 'UP';
-                        path.unshift(dir);
-                        cur = prev;
-                    }
-                    return path;
-                }
-
-                for (let d of directions) {
-                    const nx = current.x + d.dx;
-                    const ny = current.y + d.dy;
-                    if (nx < 0 || nx >= tileCount || ny < 0 || ny >= tileCount) continue;
-                    if (visited[ny][nx]) continue;
-                    // 判断障碍物：墙壁、AI 蛇（不考虑即将消失的尾部，可进一步优化）、玩家蛇
-                    if (isObstacle({ x: nx, y: ny })) continue;
-                    visited[ny][nx] = true;
-                    parent[ny][nx] = current;
-                    queue.push({ x: nx, y: ny });
-                }
-            }
-            return null; // 无法到达目标
-        }
-
-        // 判断目标格是否为障碍物（即存在于 AI 蛇或玩家蛇上）
-        function isObstacle(cell) {
-            // 检查 AI 蛇（可略过尾部，因为尾部会移动，但这里简单处理）
-            for (let segment of aiSnake) {
-                if (cell.x === segment.x && cell.y === segment.y) return true;
-            }
-            // 检查玩家蛇
-            for (let segment of playerSnake) {
-                if (cell.x === segment.x && cell.y === segment.y) return true;
-            }
-            return false;
-        }
-
-        // 检查移动是否有效（不撞墙、不撞蛇）
-        function isValidMove(newHead) {
-            if (newHead.x < 0 || newHead.x >= tileCount || newHead.y < 0 || newHead.y >= tileCount) {
-                return false;
-            }
-            // 检查 AI 蛇的身体
-            for (let segment of aiSnake) {
-                if (newHead.x === segment.x && newHead.y === segment.y) {
-                    return false;
-                }
-            }
-            // 检查玩家蛇的身体
-            for (let segment of playerSnake) {
-                if (newHead.x === segment.x && newHead.y === segment.y) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        // 玩家控制的蛇（这里只是简单调用 updateSnake，因为方向由键盘事件控制）
-        function movePlayer() {
-            updateSnake(playerSnake, playerDirection);
-        }
-
-        // 更新得分显示
-        function updateScores() {
-            playerScoreDisplay.textContent = playerScore;
-            aiScoreDisplay.textContent = aiScore;
-        }
-
-        // 显示游戏结束界面
-        function showEndScreen() {
-            clearInterval(gameInterval); // 停止游戏循环
-            clearInterval(playerInterval); // 停止玩家移动
-            clearInterval(aiInterval); // 停止AI移动
-            endScreen.style.display = 'block'; // 显示结束界面
-            const winner = gameOver ? "你输了" : "你赢了！";
-            document.getElementById('endMessage').textContent = winner;
-
-            // 设置游戏结束界面风格
-            if (gameOver) {
-                document.getElementById('endMessage').style.color = 'red';  // 失败时显示红色
-                document.getElementById('endMessage').style.fontSize = '3em';
-                document.getElementById('endMessage').style.fontWeight = 'bold';
-            } else {
-                document.getElementById('endMessage').style.color = 'green';  // 胜利时显示绿色
-                document.getElementById('endMessage').style.fontSize = '3em';
-                document.getElementById('endMessage').style.fontWeight = 'bold';
-            }
-        }
-
-        // 重新开始游戏
-        function restartGame() {
-            endScreen.style.display = 'none'; // 隐藏结束界面
-            startScreen.style.display = 'block'; // 显示开始界面
-            resetGame(); // 重置游戏状态
-        }
-
-        // 重置游戏状态
-        function resetGame() {
-            gameOver = false;
-            aiGameOver = false;
-            playerSnake = [{ x: 5, y: 5 }];
-            aiSnake = [{ x: 10, y: 10 }];
-            playerLength = 1;
-            aiLength = 1;
-            food = generateFood();
-            playerDirection = 'RIGHT';
-            aiDirection = 'LEFT';
-            playerScore = 0;
-            aiScore = 0;
-            updateScores();
-        }
-
-        // 暂停游戏
-        function pauseGame() {
-            clearInterval(gameInterval);
-            clearInterval(playerInterval);
-            clearInterval(aiInterval);
-            pauseScreen.style.display = 'block';
-        }
-
-        // 继续游戏
-        function resumeGame() {
-            gameInterval = setInterval(gameLoop, 50);
-            playerInterval = setInterval(() => {
-                if (!gameOver && !aiGameOver) {
-                    movePlayer();
-                }
-            }, 200);
-            aiInterval = setInterval(() => {
-                if (!gameOver && !aiGameOver) {
-                    moveAI();
-                }
-            }, 250);
-            pauseScreen.style.display = 'none';
-        }
-
-        // 控制玩家蛇的移动
-        document.addEventListener('keydown', (e) => {
-            if (gameOver || aiGameOver) return;
-
-            if (e.key === 'ArrowLeft' && playerDirection !== 'RIGHT') {
-                playerDirection = 'LEFT';
-            } else if (e.key === 'ArrowRight' && playerDirection !== 'LEFT') {
-                playerDirection = 'RIGHT';
-            } else if (e.key === 'ArrowUp' && playerDirection !== 'DOWN') {
-                playerDirection = 'UP';
-            } else if (e.key === 'ArrowDown' && playerDirection !== 'UP') {
-                playerDirection = 'DOWN';
-            } else if (e.key === 'p' || e.key === 'P') { // 按P暂停游戏
-                pauseGame();
-            } else if (e.key === 'r' || e.key === 'R') { // 按R重新开始游戏
-                restartGame();
-            }
+    // AI 控制：采用 BFS 算法追逐食物，不主动避开玩家
+    function moveAI() {
+      const head = aiSnake[0];
+      const path = bfs(head, food);
+      if (path && path.length > 0) {
+        aiDirection = path[0]; // 执行路径中的第一步
+      } else {
+        // 若未找到路径，从所有安全方向中随机选择
+        const possibleDirections = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
+        let safeMoves = possibleDirections.filter(dir => {
+          let newHead = { x: head.x, y: head.y };
+          switch(dir) {
+            case 'LEFT': newHead.x--; break;
+            case 'RIGHT': newHead.x++; break;
+            case 'UP': newHead.y--; break;
+            case 'DOWN': newHead.y++; break;
+          }
+          return isValidMove(newHead);
         });
-    </script>
+        if (safeMoves.length > 0) {
+          aiDirection = safeMoves[Math.floor(Math.random() * safeMoves.length)];
+        }
+      }
+    }
+
+    // BFS 寻路算法，返回从起点到目标的方向数组（例如 ['UP', 'LEFT', ...]）
+    function bfs(start, target) {
+      const queue = [];
+      const visited = Array.from({ length: tileCount }, () => Array(tileCount).fill(false));
+      const parent = Array.from({ length: tileCount }, () => Array(tileCount).fill(null));
+      queue.push(start);
+      visited[start.y][start.x] = true;
+
+      const directions = [
+        { dir: 'UP', dx: 0, dy: -1 },
+        { dir: 'DOWN', dx: 0, dy: 1 },
+        { dir: 'LEFT', dx: -1, dy: 0 },
+        { dir: 'RIGHT', dx: 1, dy: 0 }
+      ];
+
+      while (queue.length > 0) {
+        const current = queue.shift();
+        if (current.x === target.x && current.y === target.y) {
+          // 找到目标，回溯构建路径
+          const path = [];
+          let cur = current;
+          while (parent[cur.y][cur.x] !== null) {
+            const prev = parent[cur.y][cur.x];
+            const dx = cur.x - prev.x;
+            const dy = cur.y - prev.y;
+            let dir;
+            if (dx === 1) dir = 'RIGHT';
+            else if (dx === -1) dir = 'LEFT';
+            else if (dy === 1) dir = 'DOWN';
+            else if (dy === -1) dir = 'UP';
+            path.unshift(dir);
+            cur = prev;
+          }
+          return path;
+        }
+
+        for (let d of directions) {
+          const nx = current.x + d.dx;
+          const ny = current.y + d.dy;
+          if (nx < 0 || nx >= tileCount || ny < 0 || ny >= tileCount) continue;
+          if (visited[ny][nx]) continue;
+          // 只将 AI 自己的身体视为障碍，忽略玩家蛇
+          if (isObstacle({ x: nx, y: ny })) continue;
+          visited[ny][nx] = true;
+          parent[ny][nx] = current;
+          queue.push({ x: nx, y: ny });
+        }
+      }
+      return null; // 无法到达目标
+    }
+
+    // 判断一个格子是否为障碍：仅考虑墙壁和 AI 蛇的身体
+    function isObstacle(cell) {
+      // 判断墙壁
+      if (cell.x < 0 || cell.x >= tileCount || cell.y < 0 || cell.y >= tileCount) return true;
+      // 只检查 AI 蛇自身，不考虑玩家蛇
+      for (let segment of aiSnake) {
+        if (cell.x === segment.x && cell.y === segment.y) return true;
+      }
+      return false;
+    }
+
+    // 检查移动是否有效（仅避墙和 AI 自己，不主动避玩家）
+    function isValidMove(newHead) {
+      if (newHead.x < 0 || newHead.x >= tileCount || newHead.y < 0 || newHead.y >= tileCount) {
+        return false;
+      }
+      for (let segment of aiSnake) {
+        if (newHead.x === segment.x && newHead.y === segment.y) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    // 玩家控制的蛇
+    function movePlayer() {
+      updateSnake(playerSnake, playerDirection);
+    }
+
+    // 更新得分显示
+    function updateScores() {
+      playerScoreDisplay.textContent = playerScore;
+      aiScoreDisplay.textContent = aiScore;
+    }
+
+    // 显示游戏结束界面
+    function showEndScreen() {
+      clearInterval(gameInterval);
+      clearInterval(playerInterval);
+      clearInterval(aiInterval);
+      endScreen.style.display = 'block';
+      const winner = gameOver ? "你输了" : "你赢了！";
+      document.getElementById('endMessage').textContent = winner;
+      if (gameOver) {
+        document.getElementById('endMessage').style.color = 'red';
+        document.getElementById('endMessage').style.fontSize = '3em';
+        document.getElementById('endMessage').style.fontWeight = 'bold';
+      } else {
+        document.getElementById('endMessage').style.color = 'green';
+        document.getElementById('endMessage').style.fontSize = '3em';
+        document.getElementById('endMessage').style.fontWeight = 'bold';
+      }
+    }
+
+    // 重新开始游戏
+    function restartGame() {
+      endScreen.style.display = 'none';
+      startScreen.style.display = 'block';
+      resetGame();
+    }
+
+    // 重置游戏状态
+    function resetGame() {
+      gameOver = false;
+      aiGameOver = false;
+      playerSnake = [{ x: 5, y: 5 }];
+      aiSnake = [{ x: 10, y: 10 }];
+      playerLength = 1;
+      aiLength = 1;
+      food = generateFood();
+      playerDirection = 'RIGHT';
+      aiDirection = 'LEFT';
+      playerScore = 0;
+      aiScore = 0;
+      updateScores();
+    }
+
+    // 暂停游戏
+    function pauseGame() {
+      clearInterval(gameInterval);
+      clearInterval(playerInterval);
+      clearInterval(aiInterval);
+      pauseScreen.style.display = 'block';
+    }
+
+    // 继续游戏
+    function resumeGame() {
+      gameInterval = setInterval(gameLoop, 100);
+      playerInterval = setInterval(() => {
+        if (!gameOver && !aiGameOver) {
+          movePlayer();
+        }
+      }, 400);
+      aiInterval = setInterval(() => {
+        if (!gameOver && !aiGameOver) {
+          moveAI();
+        }
+      }, 500);
+      pauseScreen.style.display = 'none';
+    }
+
+    // 控制玩家蛇的移动
+    document.addEventListener('keydown', (e) => {
+      if (gameOver || aiGameOver) return;
+      if (e.key === 'ArrowLeft' && playerDirection !== 'RIGHT') {
+        playerDirection = 'LEFT';
+      } else if (e.key === 'ArrowRight' && playerDirection !== 'LEFT') {
+        playerDirection = 'RIGHT';
+      } else if (e.key === 'ArrowUp' && playerDirection !== 'DOWN') {
+        playerDirection = 'UP';
+      } else if (e.key === 'ArrowDown' && playerDirection !== 'UP') {
+        playerDirection = 'DOWN';
+      } else if (e.key === 'p' || e.key === 'P') {
+        pauseGame();
+      } else if (e.key === 'r' || e.key === 'R') {
+        restartGame();
+      }
+    });
+  </script>
 </body>
 </html>
