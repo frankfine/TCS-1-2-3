@@ -64,8 +64,8 @@
     <h1>贪吃蛇游戏：玩家 vs 电脑AI</h1>
     <p class="instructions">欢迎来到贪吃蛇！</p>
     <p class="instructions">玩家蛇的颜色是绿色，AI蛇的颜色是蓝色。</p>
-    <p class="instructions">使用箭头键控制玩家蛇，AI会自动追逐食物且避免撞墙。</p>
-    <p class="instructions">如果从一个方向没有吃到食物，AI会尝试换方向。</p>
+    <p class="instructions">使用箭头键控制玩家蛇，AI会自动追逐食物且绝不撞墙！</p>
+    <p class="instructions">如果当前方向无效，AI会尝试其他安全方向。</p>
     <p class="instructions">快捷键：按 "P" 暂停游戏，按 "R" 重新开始游戏。</p>
     <button onclick="startGame()">开始游戏</button>
   </div>
@@ -128,7 +128,7 @@
     let playerInterval;
     let aiInterval;
 
-    // 辅助函数：曼哈顿距离
+    // 辅助函数：计算曼哈顿距离
     function manhattan(a, b) {
       return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
     }
@@ -237,7 +237,7 @@
     }
 
     // ---------------------------
-    // AI 控制部分：采用 A* 算法+安全检测
+    // AI 控制部分：采用 A* 算法+安全检测（绝不撞墙）
     // ---------------------------
     function moveAI() {
       const head = aiSnake[0];
@@ -253,18 +253,18 @@
           case 'UP': newHead.y--; break;
           case 'DOWN': newHead.y++; break;
         }
+        // 若下一步安全且能使距离变短，则采用该方向
         const newDistance = manhattan(newHead, food);
-        // 如果下一步使距离变短且安全，则采用该方向
         if (newDistance < currentDistance && isValidMove(newHead)) {
           aiDirection = nextDir;
           return;
         }
       }
-      // 如果未找到合适方向，尝试从所有安全方向中随机选择一个
+      // 如果上述方向无效，则采用备用安全策略，确保不会撞墙
       fallbackSafeMove(head);
     }
 
-    // 安全随机选择一个方向（确保不会撞墙或撞自己）
+    // 安全随机选择一个方向（确保不会撞墙或撞到 AI 自己）
     function fallbackSafeMove(head) {
       const possibleDirections = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
       let safeMoves = possibleDirections.filter(dir => {
@@ -284,12 +284,15 @@
 
     // A* 算法实现
     function astar(start, target) {
+      // 将节点转换为字符串，作为哈希键
       function hash(node) {
         return node.x + ',' + node.y;
       }
+      // 启发函数：曼哈顿距离
       function heuristic(a, b) {
         return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
       }
+      // 获取相邻且不为障碍的节点
       function getNeighbors(node) {
         const dirs = [
           { dx: 0, dy: -1 },
@@ -313,7 +316,7 @@
       let openSet = new Set();
       let openList = [];
       let cameFrom = {};  // key: "x,y"  value: 父节点
-      let gScore = {};    // key: "x,y"  value: 从起点到该节点的代价
+      let gScore = {};    // key: "x,y"  value: 起点到该节点的代价
       let fScore = {};    // key: "x,y"  value: gScore + 启发值
 
       for (let y = 0; y < tileCount; y++) {
@@ -361,7 +364,7 @@
           }
         }
       }
-      return null;
+      return null; // 如果无法到达目标则返回 null
     }
 
     // 重构路径，将节点序列转换为方向数组（例如 ['UP', 'LEFT', ...]）
