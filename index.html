@@ -228,6 +228,7 @@
           playerScore -= 5;  // 玩家撞墙后，减5分
         } else {
           aiGameOver = true;
+          aiScore -= 5;  // AI撞墙后，减5分
         }
       }
       for (let i = 1; i < snake.length; i++) {
@@ -237,6 +238,7 @@
             playerScore -= 5;  // 玩家撞到自己时也减5分
           } else {
             aiGameOver = true;
+            aiScore -= 5;  // AI撞到自己时也减5分
           }
         }
       }
